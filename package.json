@@ -21,6 +21,6 @@
   },
   "build": {
   	 "appId": "com.smartfridge.noVNCdesktop",
-  	 "productName": "noVNC Desktop",
-  }
+  	 "productName": "noVNC Desktop"
+}
 }
