@@ -1,5 +1,5 @@
 {
-  "name": "electron-quick-start",
+  "name": "noVNC-desktop",
   "version": "1.0.0",
   "description": "A minimal Electron application",
   "main": "main.js",
@@ -18,5 +18,9 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^20.2.0"
+  },
+  "build": {
+  	 "appId": "com.smartfridge.noVNCdesktop",
+  	 "productName": "noVNC Desktop",
   }
 }
