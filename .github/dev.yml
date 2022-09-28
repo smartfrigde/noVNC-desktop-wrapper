@@ -1,0 +1,117 @@
+name: Dev build
+on: 
+  push:
+    branches:
+      - master
+
+env:
+  FORCE_COLOR: true
+
+jobs:
+    build-linux:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/setup-node@v3
+              with:
+                node-version: '18'
+
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Install Node dependencies
+              run: npm install
+
+            - name: Install Electron-Builder
+              run: npm install -g electron-builder
+
+            - name: Build
+              run: electron-builder --linux zip && electron-builder --arm64 --linux zip
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: noVNCLinux.zip
+                  path: dist/noVNC-desktop-1.0.0.zip
+            - name: Upload artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: noVNCLinuxArm64.zip
+                  path: dist/noVNC-desktop-1.0.0-arm64.zip
+    build-windows:
+        runs-on: windows-latest
+
+        steps:
+            - uses: actions/setup-node@v3
+              with:
+                node-version: '18'
+
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Install Node dependencies
+              run: npm install
+              
+            - name: Install Electron-Builder
+              run: npm install -g electron-builder
+
+            - name: Build
+              run: electron-builder --windows zip
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: noVNCWindows.zip
+                  path: dist/noVNC-desktop-1.0.0-win.zip
+            
+
+    release:
+        runs-on: ubuntu-latest
+        needs: [build-linux, build-mac, build-windows]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - uses: actions/download-artifact@v2
+              with:
+                  name: noVNCWindows.zip
+                  path: windows
+
+            - uses: actions/download-artifact@v2
+              with:
+                  name: noVNCLinux.zip
+                  path: linux
+
+            - uses: actions/download-artifact@v2
+              with:
+                  name: noVNCLinuxArm64.zip
+                  path: linux
+
+            - name: Get some values needed for the release
+              id: vars
+              shell: bash
+              run: |
+                echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+            - uses: dev-drprasad/delete-tag-and-release@v0.2.0
+              with:
+                delete_release: true
+                tag_name: devbuild
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Create the release
+              uses: softprops/action-gh-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: devbuild
+                  name: Dev Build ${{ steps.vars.outputs.sha_short }}
+                  draft: false
+                  prerelease: true
+                  body_path: .github/release.md
+                  files: |
+                      linux/noVNC-desktop-1.0.0.zip
+                      linux/noVNC-desktop-1.0.0-arm64.zip
+                      windows/noVNC-desktop-1.0.0-win.zip
